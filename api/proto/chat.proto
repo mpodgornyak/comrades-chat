@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+// gRPC proto
+
+service ChatService {
+  // Define your RPC methods here
+}

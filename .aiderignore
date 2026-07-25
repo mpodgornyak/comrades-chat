@@ -1,0 +1,15 @@
+﻿**/build/
+**/target/
+**/.gradle/
+**/out/
+**/node_modules/
+**/.idea/
+**/.vscode/
+.git/
+__pycache__/
+.docker/
+.env
+*.pem
+*.key
+**/*.tfstate
+**/.terraform/
