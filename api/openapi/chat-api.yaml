@@ -1,1 +1,83 @@
-# OpenAPI spec
+openapi: 3.0.0
+info:
+  title: Comrades Chat API
+  description: API for decentralized messaging
+  version: 1.0.0
+tags:
+  - name: System
+    description: System health and status
+  - name: Messages
+    description: Encrypted message operations
+paths:
+  /api/v1/health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      operationId: getHealth
+      responses:
+        '200':
+          description: Health check response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /api/v1/messages:
+    post:
+      tags:
+        - Messages
+      summary: Send encrypted message
+      operationId: sendMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageRequest'
+      responses:
+        '201':
+          description: Message accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - timestamp
+      properties:
+        status:
+          type: string
+          example: "UP"
+        timestamp:
+          type: string
+          format: date-time
+    MessageRequest:
+      type: object
+      required:
+        - recipientId
+        - encryptedPayload
+        - clientTimestamp
+      properties:
+        recipientId:
+          type: string
+        encryptedPayload:
+          type: string
+          description: Base64 encoded E2E payload
+        clientTimestamp:
+          type: integer
+          format: int64
+    MessageResponse:
+      type: object
+      required:
+        - messageId
+        - status
+      properties:
+        messageId:
+          type: string
+        status:
+          type: string
+          example: "queued"

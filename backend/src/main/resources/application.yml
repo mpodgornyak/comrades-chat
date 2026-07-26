@@ -1,1 +1,37 @@
-# Configuration file for Comrades Chat backend
+spring:
+  application:
+    name: comrades-chat-backend
+  
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:comrades_chat}
+    username: ${DB_USER:comrades}
+    password: ${DB_PASSWORD:comrades_secret}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+  
+  jpa:
+    hibernate:
+      ddl-auto: none # ВАЖНО: Отключаем Hibernate DDL, теперь всем рулит Liquibase
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml # Путь к мастер-файлу
+    enabled: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+logging:
+  level:
+    liquibase: DEBUG
+    org.springframework.boot.autoconfigure.liquibase: DEBUG

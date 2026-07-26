@@ -26,11 +26,14 @@ yarn-error.log*
 Thumbs.db
 
 # Aider chat history
+.aider.tags.cache.*
 .aider.chat.history.md
 .aider.input.history
 .aider.conf.yml
 .env
 backend/build/
 backend/target/
+backend/.gradle/
 frontend/web/node_modules/
 frontend/android/.gradle/
+
