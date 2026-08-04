@@ -1,32 +1,143 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
   title: Comrades Chat API
-  description: API for decentralized messaging
+  description: E2E encrypted, censorship-resistant messaging platform
   version: 1.0.0
+  contact:
+    name: Comrades Chat Team
+    email: support@comrades.chat
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+security:
+  - BearerAuth: []
+
 tags:
-  - name: System
-    description: System health and status
+  - name: Health
+    description: Health check endpoints
+  - name: Authentication
+    description: User registration and login
   - name: Messages
-    description: Encrypted message operations
+    description: Message sending, inbox, and acknowledgment
+  - name: Devices
+    description: Device registration and management
+
+# ============================================
+# ЭНДПОИНТЫ
+# ============================================
 paths:
+
+  # ---------- Health ----------
   /api/v1/health:
     get:
       tags:
-        - System
+        - Health
       summary: Health check
+      description: Returns application health status
       operationId: getHealth
+      security: []  # Публичный, без JWT
       responses:
         '200':
-          description: Health check response
+          description: Application is healthy
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
+
+  # ---------- Authentication ----------
+  /api/v1/auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register new user
+      description: Register a new user and return JWT tokens
+      operationId: registerUser
+      security: []  # Публичный
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid input or user already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login user
+      description: Authenticate user and return JWT tokens
+      operationId: loginUser
+      security: []  # Публичный
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh JWT token
+      description: Get new access token using refresh token
+      operationId: refreshToken
+      security: []  # Публичный
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ---------- Messages ----------
   /api/v1/messages:
     post:
       tags:
         - Messages
-      summary: Send encrypted message
+      summary: Send message
+      description: Send encrypted message to recipient. Creates entry in messages table and message_queue for each recipient device.
       operationId: sendMessage
       requestBody:
         required: true
@@ -41,43 +152,377 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Duplicate message (same idempotencyKey)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /api/v1/messages/inbox:
+    get:
+      tags:
+        - Messages
+      summary: Get inbox messages
+      description: Retrieve all undelivered messages for a specific device
+      operationId: getInbox
+      parameters:
+        - name: deviceId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Device ID to fetch messages for
+      responses:
+        '200':
+          description: List of undelivered messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InboxMessage'
+        '400':
+          description: Invalid deviceId
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/messages/ack:
+    post:
+      tags:
+        - Messages
+      summary: Acknowledge messages
+      description: Confirm delivery of messages and remove them from queue
+      operationId: acknowledgeMessages
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcknowledgeRequest'
+      responses:
+        '204':
+          description: Messages acknowledged successfully
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ---------- Devices ----------
+  /api/v1/devices:
+    post:
+      tags:
+        - Devices
+      summary: Register device
+      description: Register a new device for the authenticated user
+      operationId: registerDevice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceRegistrationRequest'
+      responses:
+        '201':
+          description: Device registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceRegistrationResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags:
+        - Devices
+      summary: List user devices
+      description: Get all devices registered for the authenticated user
+      operationId: listDevices
+      responses:
+        '200':
+          description: List of devices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeviceInfo'
+
+  /api/v1/devices/{deviceId}:
+    delete:
+      tags:
+        - Devices
+      summary: Unregister device
+      description: Remove device registration
+      operationId: unregisterDevice
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Device unregistered successfully
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+# ============================================
+# СХЕМЫ (DTO)
+# ============================================
 components:
+
+  # ---------- Security Schemes ----------
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /auth/login or /auth/register
+
+  # ---------- Schemas ----------
   schemas:
+
+    # Health
     HealthResponse:
       type: object
-      required:
-        - status
-        - timestamp
+      required: [status, timestamp]
       properties:
         status:
           type: string
-          example: "UP"
+          example: UP
         timestamp:
           type: string
           format: date-time
+
+    # Authentication
+    RegisterRequest:
+      type: object
+      required: [username, password, publicKey]
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+          pattern: '^[a-zA-Z0-9_]+$'
+          description: Unique username (alphanumeric and underscores only)
+          example: john_doe
+        password:
+          type: string
+          minLength: 8
+          maxLength: 100
+          description: User password (will be hashed)
+        publicKey:
+          type: string
+          description: User's public key for E2E encryption
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          description: Username
+          example: Nagibator
+        password:
+          type: string
+          description: Password
+          example: '12345678'
+
+    RefreshTokenRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+          description: Refresh token received from login/register
+
+    AuthResponse:
+      type: object
+      required: [accessToken, refreshToken, userId, expiresIn]
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token
+        refreshToken:
+          type: string
+          description: JWT refresh token
+        userId:
+          type: string
+          format: uuid
+          description: User ID
+        expiresIn:
+          type: integer
+          format: int32
+          description: Access token expiration time in seconds
+          example: 86400
+
+    # Messages
     MessageRequest:
       type: object
-      required:
-        - recipientId
-        - encryptedPayload
-        - clientTimestamp
+      required: [recipientId, payload, clientTimestamp, idempotencyKey]
       properties:
         recipientId:
           type: string
-        encryptedPayload:
+          format: uuid
+          description: Recipient user ID
+        payload:
           type: string
-          description: Base64 encoded E2E payload
+          description: Encrypted message payload (base64)
         clientTimestamp:
           type: integer
           format: int64
+          description: Client-side timestamp (Unix epoch milliseconds)
+        idempotencyKey:
+          type: string
+          format: uuid
+          description: Unique key generated by client to prevent duplicates
+
     MessageResponse:
       type: object
-      required:
-        - messageId
-        - status
+      required: [messageId, status]
       properties:
         messageId:
           type: string
+          format: uuid
+          description: Unique message ID
         status:
           type: string
-          example: "queued"
+          description: Message status
+          enum: [QUEUED, DELIVERED, READ]
+          example: QUEUED
+
+    InboxMessage:
+      type: object
+      required: [messageId, senderId, payload, clientTimestamp]
+      properties:
+        messageId:
+          type: string
+          format: uuid
+          description: Message ID
+        senderId:
+          type: string
+          format: uuid
+          description: Sender user ID
+        payload:
+          type: string
+          description: Encrypted message payload
+        clientTimestamp:
+          type: integer
+          format: int64
+          description: Client-side timestamp
+
+    AcknowledgeRequest:
+      type: object
+      required: [messageIds, deviceId]
+      properties:
+        messageIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: List of message IDs to acknowledge
+        deviceId:
+          type: string
+          format: uuid
+          description: Device ID acknowledging the messages
+
+    # Devices
+    DeviceRegistrationRequest:
+      type: object
+      required: [deviceId, deviceType]
+      properties:
+        deviceId:
+          type: string
+          format: uuid
+          description: Device ID (UUID v4, generated by client)
+        deviceName:
+          type: string
+          maxLength: 100
+          description: Human-readable device name
+          example: iPhone 15 Pro
+        deviceType:
+          type: string
+          enum: [MOBILE, WEB, DESKTOP]
+          description: Device type
+          example: MOBILE
+
+    DeviceRegistrationResponse:
+      type: object
+      required: [deviceId, status]
+      properties:
+        deviceId:
+          type: string
+          format: uuid
+          description: Registered device ID
+        status:
+          type: string
+          description: Device status
+          enum: [ACTIVE, LOGGED_OUT]
+          example: ACTIVE
+
+    DeviceInfo:
+      type: object
+      required: [deviceId, deviceType, status]
+      properties:
+        deviceId:
+          type: string
+          format: uuid
+          description: Device ID
+        deviceName:
+          type: string
+          description: Human-readable device name
+        deviceType:
+          type: string
+          enum: [MOBILE, WEB, DESKTOP]
+          description: Device type
+        status:
+          type: string
+          enum: [ACTIVE, LOGGED_OUT]
+          description: Device status
+        createdAt:
+          type: string
+          format: date-time
+          description: Device registration timestamp
+        lastSeenAt:
+          type: string
+          format: date-time
+          description: Last activity timestamp
+
+    # Errors
+    ErrorResponse:
+      type: object
+      required: [status, message]
+      properties:
+        status:
+          type: integer
+          description: HTTP status code
+          example: 400
+        message:
+          type: string
+          description: Error message
+          example: Invalid username format
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp

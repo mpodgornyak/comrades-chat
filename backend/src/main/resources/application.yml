@@ -1,4 +1,10 @@
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+
 spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
   application:
     name: comrades-chat-backend
   
@@ -28,10 +34,33 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
 
-server:
-  port: ${SERVER_PORT:8080}
-
 logging:
   level:
     liquibase: DEBUG
     org.springframework.boot.autoconfigure.liquibase: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: comrades-chat
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+
+jwt:
+  secret: ${JWT_SECRET:your-super-secret-key_LIKE-sUPER-secret-alisjflkasnfjklnsdfkjlasbkfnb}
+  expiration-hours: 2

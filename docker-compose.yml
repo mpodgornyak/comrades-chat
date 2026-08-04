@@ -1,1 +1,67 @@
-# Base services
+version: '3.8'
+
+services:
+  # PostgreSQL - основная база данных
+  postgres:
+    image: postgres:16-alpine
+    container_name: comrades-postgres
+    environment:
+      POSTGRES_DB: comrades_chat
+      POSTGRES_USER: comrades
+      POSTGRES_PASSWORD: comrades_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - comrades-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U comrades"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis - для кэша и будущих сессий
+  redis:
+    image: redis:7-alpine
+    container_name: comrades-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - comrades-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Бэкенд (пока закомментирован, раскомментируем, когда соберем JAR)
+  # backend:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   container_name: comrades-backend
+  #   environment:
+  #     - DB_HOST=postgres
+  #     - DB_PORT=5432
+  #     - DB_NAME=comrades_chat
+  #     - DB_USER=comrades
+  #     - DB_PASSWORD=comrades_secret
+  #     - REDIS_HOST=redis
+  #     - REDIS_PORT=6379
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   networks:
+  #     - comrades-network
+
+volumes:
+  postgres_data:
+
+networks:
+  comrades-network:
+    driver: bridge
