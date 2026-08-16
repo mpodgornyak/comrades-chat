@@ -40,8 +40,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     runtimeOnly("io.micrometer:micrometer-registry-prometheus")
 
-    // UUID v7 генератор
     implementation("com.fasterxml.uuid:java-uuid-generator:5.1.0")
+    implementation("org.springframework.boot:spring-boot-starter-websocket")
 
     implementation("org.mapstruct:mapstruct:1.6.3")
     annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")

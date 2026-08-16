@@ -9,6 +9,8 @@ import com.comrades.chat.entity.message.Message;
 import com.comrades.chat.entity.message.MessageQueue;
 import com.comrades.chat.exception.IdempotentRequestException;
 import com.comrades.chat.mapper.MessageMapper;
+import com.comrades.chat.notificaiton.NewMessageEvent;
+import com.comrades.chat.notificaiton.NotificationPublisher;
 import com.comrades.chat.repository.MessageQueueRepository;
 import com.comrades.chat.repository.MessageRepository;
 import com.comrades.chat.service.device.DeviceService;
@@ -31,7 +33,9 @@ public class MessageServiceImpl implements MessageService {
     private final MessageQueueRepository messageQueueRepository;
     private final DeviceService deviceService;
     private final MessageMapper messageMapper;
+    private final NotificationPublisher notificationPublisher;
 
+    @Override
     @Transactional
     public MessageResponse sendMessage(UUID senderId, MessageRequest request) {
         log.info("Sending message from {} to {}", senderId, request.getRecipientId());
@@ -56,7 +60,7 @@ public class MessageServiceImpl implements MessageService {
                     .orElseThrow(() -> new IllegalStateException("Message disappeared after duplicate error"));
         }
 
-        fanOutToRecipientDevices(saved.getId(), request.getRecipientId());
+        fanOutToRecipientDevices(saved.getId(), request.getRecipientId(), senderId);
 
         log.info("Message saved: id={}, chatId={}", saved.getId(), saved.getChatId());
         return messageMapper.toResponse(saved);
@@ -123,7 +127,7 @@ public class MessageServiceImpl implements MessageService {
     /**
      * Создаёт записи в message_queue для каждого активного устройства получателя.
      */
-    private void fanOutToRecipientDevices(UUID messageId, UUID recipientId) {
+    private void fanOutToRecipientDevices(UUID messageId, UUID recipientId, UUID senderId) {
         List<Device> recipientDevices = deviceService.getActiveDevices(recipientId);
 
         if (recipientDevices.isEmpty()) {
@@ -136,6 +140,13 @@ public class MessageServiceImpl implements MessageService {
             queueEntry.setMessageId(messageId);
             queueEntry.setRecipientDeviceId(device.getId());
             messageQueueRepository.save(queueEntry);
+
+            notificationPublisher.notifyNewMessage(device.getId(), NewMessageEvent.builder()
+                    .messageId(messageId)
+                    .senderId(senderId)
+                    .recipientId(recipientId)
+                    .clientTimestamp(System.currentTimeMillis())
+                    .build());
         }
 
         log.info("Message {} queued for {} devices", messageId, recipientDevices.size());
