@@ -86,6 +86,7 @@ tasks.named<GenerateTask>("openApiGenerate") {
         "useTags" to "true",
         "dateLibrary" to "java8",
         "useLombokAnnotations" to "true",
+        "useBeanValidation" to "true"
         //"additionalModelTypeAnnotations" to "@lombok.AllArgsConstructor @lombok.Builder"
     ))
 }

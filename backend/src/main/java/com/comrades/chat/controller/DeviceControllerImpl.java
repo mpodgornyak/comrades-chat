@@ -6,6 +6,7 @@ import com.comrades.chat.dto.DeviceRegistrationRequest;
 import com.comrades.chat.dto.DeviceRegistrationResponse;
 import com.comrades.chat.security.SecurityUtil;
 import com.comrades.chat.service.device.DeviceService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -30,7 +31,7 @@ public class DeviceControllerImpl implements DevicesApi {
     }
 
     @Override
-    public ResponseEntity<DeviceRegistrationResponse> registerDevice(DeviceRegistrationRequest deviceRegistrationRequest) {
+    public ResponseEntity<DeviceRegistrationResponse> registerDevice(@Valid DeviceRegistrationRequest deviceRegistrationRequest) {
         UUID userId = SecurityUtil.getCurrentUserId();
         DeviceRegistrationResponse response = deviceService.registerDevice(userId, deviceRegistrationRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

@@ -9,6 +9,7 @@ import com.comrades.chat.mapper.MessageMapper;
 import com.comrades.chat.exception.IdempotentRequestException;
 import com.comrades.chat.service.message.MessageService;
 import com.comrades.chat.security.SecurityUtil;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -27,7 +28,7 @@ public class MessageControllerImpl implements MessagesApi {
     private final MessageMapper messageMapper;
 
     @Override
-    public ResponseEntity<MessageResponse> sendMessage(MessageRequest messageRequest) {
+    public ResponseEntity<MessageResponse> sendMessage(@Valid MessageRequest messageRequest) {
         UUID senderId = SecurityUtil.getCurrentUserId();
         try {
             var response = messageService.sendMessage(senderId, messageRequest);
@@ -40,7 +41,7 @@ public class MessageControllerImpl implements MessagesApi {
     }
 
     @Override
-    public ResponseEntity<Void> acknowledgeMessages(AcknowledgeRequest request) {
+    public ResponseEntity<Void> acknowledgeMessages(@Valid AcknowledgeRequest request) {
         UUID userId = SecurityUtil.getCurrentUserId();
         // TODO: добавить проверку принадлежности устройства
 
@@ -48,7 +49,7 @@ public class MessageControllerImpl implements MessagesApi {
         return ResponseEntity.noContent().build();
     }
 
-    public ResponseEntity<List<InboxMessage>> getInbox(UUID deviceId) {
+    public ResponseEntity<List<InboxMessage>> getInbox(@Valid UUID deviceId) {
         // Проверяем, что устройство принадлежит текущему пользователю
         UUID userId = SecurityUtil.getCurrentUserId();
         // TODO: добавить проверку принадлежности устройства

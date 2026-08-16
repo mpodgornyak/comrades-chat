@@ -6,6 +6,7 @@ import com.comrades.chat.dto.LoginRequest;
 import com.comrades.chat.dto.RefreshTokenRequest;
 import com.comrades.chat.dto.RegisterRequest;
 import com.comrades.chat.service.authentication.AuthenticationService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,17 +19,17 @@ public class AuthenticationControllerImpl implements AuthenticationApi {
 
 
     @Override
-    public ResponseEntity<AuthResponse> loginUser(LoginRequest loginRequest) {
+    public ResponseEntity<AuthResponse> loginUser(@Valid LoginRequest loginRequest) {
         return ResponseEntity.ok(authenticationService.loginUser(loginRequest));
     }
 
     @Override
-    public ResponseEntity<AuthResponse> refreshToken(RefreshTokenRequest refreshTokenRequest) {
+    public ResponseEntity<AuthResponse> refreshToken(@Valid RefreshTokenRequest refreshTokenRequest) {
         return ResponseEntity.ok(authenticationService.refreshToken(refreshTokenRequest));
     }
 
     @Override
-    public ResponseEntity<AuthResponse> registerUser(RegisterRequest registerRequest) {
+    public ResponseEntity<AuthResponse> registerUser(@Valid RegisterRequest registerRequest) {
         return ResponseEntity.ok(authenticationService.register(registerRequest));
     }
 }

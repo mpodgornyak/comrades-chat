@@ -1,5 +1,6 @@
-package com.comrades.chat.security;
+package com.comrades.chat.filter;
 
+import com.comrades.chat.security.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
