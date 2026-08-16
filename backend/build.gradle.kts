@@ -40,9 +40,6 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     runtimeOnly("io.micrometer:micrometer-registry-prometheus")
 
-    implementation("com.fasterxml.uuid:java-uuid-generator:5.1.0")
-    implementation("org.springframework.boot:spring-boot-starter-websocket")
-
     implementation("org.mapstruct:mapstruct:1.6.3")
     annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
 
@@ -56,6 +53,10 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-api:0.12.6")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
+
+    implementation("com.fasterxml.uuid:java-uuid-generator:5.1.0")
+    implementation("org.springframework.boot:spring-boot-starter-websocket")
+    implementation("com.bucket4j:bucket4j-core:8.10.1")
 
     // TestContainers (для будущих интеграционных тестов)
     testImplementation("org.testcontainers:postgresql:1.20.4")

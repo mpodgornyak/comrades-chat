@@ -63,4 +63,7 @@ springdoc:
 
 jwt:
   secret: ${JWT_SECRET:your-super-secret-key_LIKE-sUPER-secret-alisjflkasnfjklnsdfkjlasbkfnb}
-  expiration-hours: 2
+  access-expiration-hours: 2
+
+rate-limit:
+  enabled: true

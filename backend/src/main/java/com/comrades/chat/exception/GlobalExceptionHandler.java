@@ -100,6 +100,16 @@ public class GlobalExceptionHandler {
     }
 
     // ============================================
+    // 429 Too Many Requests — rate limiting
+    // ============================================
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ErrorResponse> handleRateLimitExceeded(RateLimitExceededException ex) {
+        log.warn("Rate limit exceeded: {}", ex.getMessage());
+        return buildResponse(HttpStatus.TOO_MANY_REQUESTS,
+                "Too many requests. Please try again later.");
+    }
+
+    // ============================================
     // Вспомогательные методы
     // ============================================
     private String formatFieldError(FieldError error) {
