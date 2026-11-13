@@ -8,6 +8,7 @@ import com.comrades.chat.dto.RegisterRequest;
 import com.comrades.chat.service.authentication.AuthenticationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,6 +31,6 @@ public class AuthenticationControllerImpl implements AuthenticationApi {
 
     @Override
     public ResponseEntity<AuthResponse> registerUser(@Valid RegisterRequest registerRequest) {
-        return ResponseEntity.ok(authenticationService.register(registerRequest));
+        return ResponseEntity.status(HttpStatus.CREATED).body(authenticationService.register(registerRequest));
     }
 }

@@ -59,10 +59,15 @@ dependencies {
     implementation("com.bucket4j:bucket4j-core:8.10.1")
 
     // TestContainers (для будущих интеграционных тестов)
-    testImplementation("org.testcontainers:postgresql:1.20.4")
-    testImplementation("org.testcontainers:junit-jupiter:1.20.4")
-
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-testcontainers")
+    testImplementation("org.testcontainers:postgresql:1.21.4")
+    testImplementation("org.testcontainers:junit-jupiter:1.21.4")
+    testImplementation("org.testcontainers:testcontainers:1.21.4")
+    testImplementation("com.github.docker-java:docker-java-core:3.4.1")
+    testImplementation("com.github.docker-java:docker-java-transport-httpclient5:3.4.1")
+    testImplementation("com.github.docker-java:docker-java-api:3.4.1")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 tasks.withType<Test> {
@@ -101,7 +106,32 @@ sourceSets {
     }
 }
 
+configurations.testImplementation {
+    resolutionStrategy {
+        force("com.github.docker-java:docker-java-api:3.4.1")
+        force("com.github.docker-java:docker-java-core:3.4.1")
+        force("com.github.docker-java:docker-java-transport:3.4.1")
+    }
+}
+
 // Заставляем компиляцию Java ждать завершения генерации
 tasks.named("compileJava") {
     dependsOn("openApiGenerate")
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
+
+    // TestContainers настройки
+    systemProperty("DOCKER_HOST", "tcp://localhost:2375")
+    systemProperty("TESTCONTAINERS_RYUK_DISABLED", "true")
+    systemProperty("testcontainers.reuse.enable", "true")
+
+    // Hikari настройки для тестов
+    systemProperty("spring.datasource.hikari.maximum-pool-size", "5")
+    systemProperty("spring.datasource.hikari.connection-timeout", "60000")
+    systemProperty("spring.datasource.hikari.idle-timeout", "30000")
+
+    // Больше памяти для тестов
+    maxHeapSize = "1g"
 }

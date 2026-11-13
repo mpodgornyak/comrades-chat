@@ -36,7 +36,7 @@ public class MessageControllerImpl implements MessagesApi {
         } catch (IdempotentRequestException exception) {
             log.info("Returning existing message. IdempotentKey: {}", exception.getExistingMessage().getIdempotencyKey());
             var existingMsg = messageMapper.toResponse(exception.getExistingMessage());
-            return ResponseEntity.ok(existingMsg);
+            return ResponseEntity.status(HttpStatus.CREATED).body(existingMsg);
         }
     }
 
